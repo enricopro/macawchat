@@ -1,5 +1,6 @@
 import styles from './Login.module.css';
 import loginGoogleLogo from '../../images/google_login.png';
+import loadingGif from '../../images/loading.gif'
 import { useState, useEffect } from 'react';
 import firebase from 'firebase/app';
 import "firebase/auth";
@@ -7,18 +8,22 @@ import "firebase/auth";
 
 export default function Login() {
 
-  const [name, setName] = useState();
+  const [name, setName] = useState('');
   const [photoUrl, setPhotoUrl] = useState();
   const [sex, setSex] = useState();
   const [age, setAge] = useState();
 
   const [loading, setLoading] = useState(false);
 
+  const [logged, isLogged] = useState(false);
   const [loginType, setLoginType] = useState(null);
 
+  //log user when loginType is setted
   useEffect(() => {
     
-    async function logUser() {
+    async function logUserWithGoogle() {
+
+      setLoading(true);
 
       const provider = new firebase.auth.GoogleAuthProvider();
 
@@ -29,27 +34,60 @@ export default function Login() {
           setName(result.user.displayName);
 
           setLoading(false);
+          isLogged(true);
 
         }).catch((error) => {
 
           setLoading(false);
-          console.log(error);
+          setLoginType(null);
 
         });
 
     }
 
+    async function logUserAnonymously() {
+
+      setLoading(true);
+
+      firebase.auth().signInAnonymously().then((user) => {
+
+        console.log(user);
+        setLoading(false);
+        isLogged(true);
+
+      })
+      .catch((error) => {
+
+        setLoading(false);
+        setLoginType(null);
+
+      });
+    
+
+    }
+
+
     if(loginType == null) {
       return;
     }
 
-    logUser();
+    if(loginType === "google") {
+      logUserWithGoogle();
+    }
+
+    if(loginType === "anonymous") {
+      logUserAnonymously();
+    }
     
   }, [loginType]);
 
   function renderLogin() {
 
     if(loading) {
+      return null;
+    }
+
+    if(loginType != null) {
       return null;
     }
 
@@ -60,7 +98,7 @@ export default function Login() {
           <img className={styles.loginWithGoogleLogo} src={loginGoogleLogo} alt="google_login" onClick={() => setLoginType('google')} />
         </div>
         <p>or</p>
-        <p className={styles.signInAnonymously}>Sign-in anonymously</p>
+        <p className={styles.signInAnonymously} onClick={() => setLoginType('anonymous')}>Sign-in anonymously</p>
       </>
     )
 
@@ -72,12 +110,20 @@ export default function Login() {
       return null;
     }
 
+    if(loginType == null) {
+      return null;
+    }
+
+    if(logged === false) { //avoid bug at the beginning
+      return null;
+    }
+
     return(
       <>
         <h2 className={styles.insertDataDescription}>Insert your data:</h2>
         <div className={styles.inputContainer}>
           <p>Name:</p>
-          <input className={styles.input} type="text" placeholder={name == null ? "Insert your name here..." : name}/>
+          <input className={styles.input} onChange={(e) => console.log(e.target.value)} type="text" placeholder={name === '' ? "Insert your name here..." : name}/>
         </div>
         <div className={styles.inputContainer}>
           <p>Sex:</p>
@@ -89,7 +135,7 @@ export default function Login() {
         </div>
         <div className={styles.inputContainer}>
           <p>Age:</p>
-          <input className={styles.input} type="text" placeholder="Insert your age here..."/>
+          <input className={styles.input} type="number" placeholder="Insert your age here..." />
         </div>
         <div className={styles.submitButton}>Jump in the chat! 🚀</div>
       </>
@@ -105,9 +151,7 @@ export default function Login() {
     }
 
     return <div>
-      <circle cx="50" cy="50" fill="none" stroke="#df1317" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
-        <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
-      </circle>
+      <img src={loadingGif} alt='loading_gif' width={25}/>
     </div>
   }
 
@@ -116,6 +160,7 @@ export default function Login() {
     <div className={styles.login}>
       {renderLogin()}
       {renderLoading()}
+      {renderInsertData()}
     </div>
   )
 
