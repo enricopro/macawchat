@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
+import Chat from './components/chat/Chat';
 
 
 function App() {
@@ -45,7 +46,7 @@ function App() {
 
   return (
     <div className="App">
-      {renderContent()}
+      <Chat />
     </div>
   );
 }

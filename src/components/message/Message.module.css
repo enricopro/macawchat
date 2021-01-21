@@ -1,0 +1,47 @@
+.lineFromMe {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lineFromYou {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.messageFromMe {
+  min-height: 20pt;
+  width: fit-content;
+  max-width: 30%;
+  background-color: #bbe1fa;
+  margin-bottom: 10pt;
+  margin-right: 10pt;
+  display: flex;
+  align-items: center;
+  padding-left: 10pt;
+  padding-right: 10pt;
+  padding-top: 4pt;
+  padding-bottom: 4pt;
+  border-radius: 12pt;
+}
+
+.messageFromYou {
+  min-height: 20pt;
+  width: fit-content;
+  max-width: 30%;
+  background-color: #bbe1fa;
+  margin-bottom: 10pt;
+  margin-left: 10pt;
+  display: flex;
+  align-items: center;
+  padding-left: 10pt;
+  padding-right: 10pt;
+  padding-top: 4pt;
+  padding-bottom: 4pt;
+  border-radius: 12pt;
+}
+
+p {
+  color: black
+}
