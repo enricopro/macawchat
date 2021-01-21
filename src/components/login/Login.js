@@ -6,19 +6,21 @@ import firebase from 'firebase/app';
 import "firebase/auth";
 
 
-export default function Login() {
+export default function Login({onShowLogin, showLogin}) {
 
   const [name, setName] = useState('');
-  const [photoUrl, setPhotoUrl] = useState();
-  const [sex, setSex] = useState();
-  const [age, setAge] = useState();
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [sex, setSex] = useState('');
+  const [age, setAge] = useState('');
 
   const [loading, setLoading] = useState(false);
 
   const [logged, isLogged] = useState(false);
+  const [dataInserted, isDataInserted] = useState(false);
   const [loginType, setLoginType] = useState(null);
 
-  //log user when loginType is setted
+
+  //logs user when loginType is setted
   useEffect(() => {
     
     async function logUserWithGoogle() {
@@ -29,9 +31,10 @@ export default function Login() {
 
       firebase.auth().signInWithPopup(provider).then((result) => {
 
-          console.log(result.user);
-
+          setPhotoUrl(result.user.photoURL);
           setName(result.user.displayName);
+
+          isAlreadyRegistered(result.user.uid);
 
           setLoading(false);
           isLogged(true);
@@ -49,9 +52,10 @@ export default function Login() {
 
       setLoading(true);
 
-      firebase.auth().signInAnonymously().then((user) => {
+      firebase.auth().signInAnonymously().then((result) => {
 
-        console.log(user);
+        isAlreadyRegistered(result.user.uid);
+
         setLoading(false);
         isLogged(true);
 
@@ -67,6 +71,19 @@ export default function Login() {
     }
 
 
+    async function isAlreadyRegistered(userId) {
+
+      const db = firebase.firestore();
+
+      db.collection("users").doc(userId).get().then((doc) => {
+        if (doc.exists) {
+          console.log('User already registered');
+          onShowLogin(false);
+        }
+      });
+    }
+
+
     if(loginType == null) {
       return;
     }
@@ -79,7 +96,61 @@ export default function Login() {
       logUserAnonymously();
     }
     
-  }, [loginType]);
+  }, [loginType, onShowLogin]);
+
+
+  //uploads user data to firestore
+  useEffect(() => {
+
+    async function writeInDatabase() {
+
+      setLoading(true);
+
+      firebase.auth().onAuthStateChanged(function(user) {
+
+        if (user) {
+      
+          const db = firebase.firestore();
+
+          if(name === '') {
+            setName('Happy Macaw');
+          }
+          if(age === '' || age > 100) {
+            alert("Insert a valid age please");
+            return;
+          }
+          if(photoUrl === '') {
+            setPhotoUrl('https://lafeber.com/pet-birds/wp-content/uploads/2018/06/Blue-and-Gold-Macaw.jpg');
+          }
+
+
+          db.collection("users").doc(user.uid).set({
+            name: name,
+            sex: sex,
+            age: age.toString(),
+            photoURL: photoUrl,
+            online: true,
+            room: 'none'
+          })
+          .then(function() {
+              setLoading(false);
+              onShowLogin(false);
+          })
+          .catch(function(error) {
+              alert("Something went wrong, try to reload the page (error: " + error + ")");
+              return;
+          });
+        }
+      });
+
+    }
+
+    if(dataInserted) {
+      writeInDatabase();
+    }
+    
+  }, [age, sex, dataInserted, name, photoUrl, onShowLogin]);
+
 
   function renderLogin() {
 
@@ -104,17 +175,18 @@ export default function Login() {
 
   }
 
+  
   function renderInsertData() {
 
     if(loading) {
       return null;
     }
 
-    if(loginType == null) {
+    if(logged === false) {
       return null;
     }
 
-    if(logged === false) { //avoid bug at the beginning
+    if(!loading && logged && !showLogin) {
       return null;
     }
 
@@ -123,21 +195,21 @@ export default function Login() {
         <h2 className={styles.insertDataDescription}>Insert your data:</h2>
         <div className={styles.inputContainer}>
           <p>Name:</p>
-          <input className={styles.input} onChange={(e) => console.log(e.target.value)} type="text" placeholder={name === '' ? "Insert your name here..." : name}/>
+          <input className={styles.input} onChange={(e) => setName(e.target.value)} type="text" placeholder={name === '' ? "Insert your name here..." : name}/>
         </div>
         <div className={styles.inputContainer}>
           <p>Sex:</p>
-          <select className={styles.input} name="sex">
-            <option value="male">Male</option>
-            <option value="saab">Female</option>
-            <option value="fiat">Other</option>
+          <select className={styles.input} onChange={(e) => setSex(e.target.value)}>
+            <option value="m">Male</option>
+            <option value="f">Female</option>
+            <option value="o">Other</option>
           </select>
         </div>
         <div className={styles.inputContainer}>
           <p>Age:</p>
-          <input className={styles.input} type="number" placeholder="Insert your age here..." />
+          <input className={styles.input} onChange={(e) => setAge(e.target.value)} type="number" placeholder="Insert your age here..." />
         </div>
-        <div className={styles.submitButton}>Jump in the chat! 🚀</div>
+        <div className={styles.submitButton} onClick={() => isDataInserted(true)} >Jump in the chat! 🚀</div>
       </>
     )
 

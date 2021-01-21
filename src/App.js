@@ -1,6 +1,6 @@
 import './App.css';
 import Login from '../src/components/login/Login';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
@@ -8,6 +8,9 @@ import "firebase/firestore";
 
 function App() {
 
+  const [showLogin, setShowLogin] = useState(true);
+
+  //initalize firebase app
   useEffect(() => {
 
     const firebaseConfig = {
@@ -26,9 +29,23 @@ function App() {
    
   }, []);
 
+
+  function renderContent() {
+
+    if(showLogin) {
+      return <Login 
+        onShowLogin={setShowLogin}
+        showLogin={showLogin} />
+    }
+
+    return <h1>CHATTTTTTTT</h1>
+
+  }
+
+
   return (
     <div className="App">
-      <Login />
+      {renderContent()}
     </div>
   );
 }
