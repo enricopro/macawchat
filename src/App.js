@@ -39,14 +39,14 @@ function App() {
         showLogin={showLogin} />
     }
 
-    return <h1>CHATTTTTTTT</h1>
+    return <Chat />
 
   }
 
 
   return (
     <div className="App">
-      <Chat />
+      {renderContent()}
     </div>
   );
 }

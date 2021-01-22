@@ -7,7 +7,11 @@
   width: 300pt;
   min-height: 100pt;
   padding: 15pt;
-  border-radius: 15pt;  
+  border-radius: 15pt;
+}
+
+p {
+  color: white;
 }
 
 .loginDescription {

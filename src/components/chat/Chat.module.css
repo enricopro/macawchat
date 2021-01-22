@@ -42,7 +42,7 @@
   background-color: #0f4c75;
 }
 
-input {
+.messageinput {
   font-family: 'Roboto';
   font-size: 12pt;
   color: white;

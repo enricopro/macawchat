@@ -8,9 +8,11 @@ import "firebase/auth";
 export default function Chat() {
 
   const [searching, isSearching] = useState();
-  const [mateUserId, setMateUserId] = useState();
+  const [changingRoom, isChangingRoom] = useState();
 
   const [userId, setUserId] = useState();
+  const [mateUserId, setMateUserId] = useState();
+  const [roomId, setRoomId] = useState();
 
 
   //sets userId
@@ -36,24 +38,44 @@ export default function Chat() {
   useEffect(() => {
     
     async function match() {
+
+      console.log("finding a match...")
       
       const db = firebase.firestore();
       const query = db.collection("users").where("online", "==", true).where("room", "==", "none");
 
       query.get().then(function(querySnapshot) {
+
+          while(querySnapshot.size === 1) {
+            isSearching(true);
+          }
           const docs = querySnapshot.docs;
-          setMateUserId(docs[(Math.round(Math.random(1)*querySnapshot.size))].id); //takes a random user who is online
-          db.collection("rooms").add({
-            messages: [],
-            partecipants: [userId, mateUserId]
-          }).then((docRef) => {
-            db.collection("users").doc(mateUserId).set({
-              room: docRef.id,
-            }, { merge: true });
+          const mateId = selectRandomUser(docs, querySnapshot.size);
+
+          db.collection("rooms").where("partecipants", "array-contains", userId).get().then(function(snapshot) {
+            if(snapshot.size === 0) {
+              db.collection("rooms").add({
+                messages: [],
+                partecipants: [userId, mateId]
+              }).then((docRef) => {
+                setRoomId(docRef.id);
+                db.collection("users").doc(mateId).set({
+                  room: docRef.id,
+                  searching: false
+                }, { merge: true });
+                db.collection("users").doc(userId).set({
+                  room: docRef.id,
+                  searching: false
+                }, { merge: true });
+              });
+            }
           });
 
-          db.collection("users").doc(mateUserId).set({});
           isSearching(false);
+
+          console.log("My id is: " + userId);
+          console.log("My mate id is: " + mateId)
+
       })
       .catch(function(error) {
           console.log("Error getting documents: ", error);
@@ -61,11 +83,51 @@ export default function Chat() {
 
     }
 
+
+    function selectRandomUser(docs, size) {
+
+      let index = Math.round(Math.random(1)*size);
+  
+      while(userId === docs[index].id) {
+        index = Math.round(Math.random(1)*size);
+      }
+      setMateUserId(docs[index].id);
+      return docs[index].id;
+  
+    }
+
+
     if(searching) {
       match();
     }
 
-  }, [searching, mateUserId, userId]);
+  }, [searching, userId]);
+
+
+  useEffect(() => {
+
+    async function changeRoom() {
+
+      const db = firebase.firestore();
+
+      db.collection("users").doc(userId).set({
+        room: "none",
+        searching: true,
+      }, { merge: true });
+
+      db.collection("rooms").doc(roomId).delete().then(console.log("Room deleted"));
+
+      setMateUserId(null);
+      setRoomId(null);
+      isChangingRoom(false);
+      isSearching(true);
+    }
+
+    if(changingRoom) {
+      changeRoom();
+    }
+
+  }, [changingRoom, userId, roomId]);
 
 
   function renderFooter() {
@@ -75,13 +137,14 @@ export default function Chat() {
 
     return(
       <>
-        <input placeholder="Write something kind..."/>
+        <input className={styles.messageinput} placeholder="Write something kind..."/>
         <div className={styles.sendButton}>SEND 📨</div>
-        <div className={styles.nextButton}>NEXT ⏭️</div>
+        <div className={styles.nextButton} onClick={() => isChangingRoom(true)}>NEXT ⏭️</div>
       </>
     )
 
   }
+
 
   return(
     <div className={styles.chat}>

@@ -24,6 +24,7 @@
   padding-top: 4pt;
   padding-bottom: 4pt;
   border-radius: 12pt;
+  color: white;
 }
 
 .messageFromYou {
@@ -40,8 +41,5 @@
   padding-top: 4pt;
   padding-bottom: 4pt;
   border-radius: 12pt;
-}
-
-p {
-  color: black
+  color: white;
 }
