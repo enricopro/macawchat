@@ -10,7 +10,7 @@ export default function Login({onShowLogin, showLogin}) {
 
   const [name, setName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
-  const [sex, setSex] = useState('');
+  const [sex, setSex] = useState('m');
   const [age, setAge] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -130,6 +130,7 @@ export default function Login({onShowLogin, showLogin}) {
             age: age.toString(),
             photoURL: photoUrl,
             online: true,
+            searching: false,
             room: 'none'
           })
           .then(function() {
